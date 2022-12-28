@@ -1,0 +1,57 @@
+- name: Install packages
+  become: true
+  apt:
+    name:
+      - wget
+      - default-jdk
+      - git
+      - maven
+      - redis-server
+      - libmaven-compiler-plugin-java
+      - redis-tools
+      - postgresql-client
+
+      
+
+    state: latest
+
+- name: Copying worker and its contents
+  become: true 
+  copy:
+    src: worker
+    dest: /home        
+    mode: 0644    
+
+- name: Building the worker
+  become: true
+  ansible.builtin.shell: mvn clean compile package
+  args:
+    chdir: /home/worker
+
+- name: customize /etc/environment
+  become: true
+  ansible.builtin.lineinfile:
+    dest: "/etc/environment"
+    state: present
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+  with_items: "{{ os_environment }}"
+  
+
+
+- name: Uploading worker.service to Worker host
+  become: true 
+  copy:
+    src: worker.service
+    dest: /etc/systemd/system       
+    mode: 0644
+  notify:
+    - Start Worker
+  
+
+
+
+  
+
+
+

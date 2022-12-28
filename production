@@ -1,0 +1,16 @@
+[redis]
+redis1 ansible_host=192.168.122.177 ansible_user=user1 
+
+[postgres]
+postgres1 ansible_host=192.168.122.3 ansible_user=user2
+
+[poll]
+poll1 ansible_host=192.168.122.32 ansible_user=user3 
+
+[worker]
+worker1 ansible_host=192.168.122.252 ansible_user=user4
+
+[result]
+result1 ansible_host=192.168.122.107 ansible_user=user5
+
+

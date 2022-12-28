@@ -1,0 +1,6 @@
+---
+- name: Start Result
+  systemd:
+    name: result.service
+    state: started
+    daemon_reload: yes

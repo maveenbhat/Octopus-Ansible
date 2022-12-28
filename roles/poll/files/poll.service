@@ -1,0 +1,11 @@
+[Unit]
+Description = <project description>
+
+[Service]
+User=user3
+WorkingDirectory= /home/poll
+ExecStart=/bin/python3 app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

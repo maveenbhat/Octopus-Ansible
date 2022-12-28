@@ -1,0 +1,6 @@
+---
+- name: Start Poll
+  systemd:
+    name: poll
+    state: started
+    enabled: yes

@@ -1,0 +1,8 @@
+---
+- name: Start Worker
+  systemd:
+    name: worker.service
+    state: started
+    daemon_reload: yes
+
+

@@ -1,0 +1,65 @@
+- name: Install packages
+  become: true
+  apt:
+    name:
+      - wget
+      - postgresql-client
+
+- name: Copying result and its contents
+  become: true 
+  copy:
+    src: result
+    dest: /home        
+    mode: 0644
+
+- name: "Add nodejs apt key"
+  apt_key:
+    url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+    state: present
+
+- name: "Add nodejs 13.x ppa for apt repo"
+  apt_repository:
+    repo: deb https://deb.nodesource.com/node_13.x bionic main
+    update_cache: yes
+
+- name: "Install nodejs"
+  apt:
+    update_cache: yes
+    name: nodejs
+    state: present
+
+- name: "Install NPM-distributed command-line tools"
+  npm:
+    global: yes
+    name: "{{ item }}"
+  with_items:
+    - firebase-tools
+
+- name: customize /etc/environment
+  become: true
+  ansible.builtin.lineinfile:
+    dest: "/etc/environment"
+    state: present
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+  with_items: "{{ os_environment }}"
+
+- name: Installing all the project dependencies
+  become: true
+  ansible.builtin.shell:  |
+    npm install
+    npm install -g nodemon
+  args:
+    chdir: /home/result
+
+- name: Uploading result.service to Result host
+  become: true 
+  copy:
+    src: result.service
+    dest: /etc/systemd/system       
+    mode: 0644
+  notify:
+    - Start Result
+
+
+

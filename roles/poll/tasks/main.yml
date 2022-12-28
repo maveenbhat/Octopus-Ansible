@@ -1,0 +1,27 @@
+- name: Copying poll and its contents
+  become: true 
+  copy:
+    src: poll
+    dest: /home        
+    mode: 0644
+
+- name: Install python packages
+  apt:
+    name:
+      - python3-venv
+      - python3-pip
+      - python3-dev
+    state: latest
+
+- name: Install requirements
+  become: true
+  pip: requirements='/home/poll/requirements.txt'
+
+- name: Uploading poll.service to Poll host
+  become: true 
+  copy:
+    src: poll.service
+    dest: /etc/systemd/system       
+    mode: 0644
+  notify:
+    - Start Poll

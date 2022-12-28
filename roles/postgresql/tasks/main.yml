@@ -1,0 +1,90 @@
+- name: Install required packages
+  apt:
+    name:
+      - gnupg2
+      - wget
+      - python3-psycopg2
+      - acl
+      - postgresql-contrib
+    state: latest
+
+- name: Set up Postgres 14 repo
+  shell: |
+    echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+  args:
+    warn: no
+
+- name: Install postgresql
+  apt:
+    name: postgresql
+    update_cache: yes
+  notify:
+    - Enable Postgresql
+
+- name: Ensure PostgreSQL is listening on *
+  lineinfile:
+    dest: /etc/postgresql/14/main/postgresql.conf
+    regexp: '^listen_addresses\s*='
+    line: "listen_addresses='*'"
+    state: present
+  notify: 
+    - Restart Postgresql
+
+- name: Add new configuration to "pg_hba.conf"
+  blockinfile:
+    dest: /etc/postgresql/14/main/pg_hba.conf
+    block: |
+      host    all             all             0.0.0.0/0                password
+      host    all             all             ::/0                     password
+  notify: 
+    - Restart Postgresql
+
+- name: Change peer identification to trust
+  shell: /bin/sed -i '/^local/s/peer/trust/' /etc/postgresql/14/main/pg_hba.conf
+  args:
+    warn: no
+  notify: 
+    - Restart Postgresql
+
+- name: "Create app database"
+  postgresql_db:
+    state: present
+    name: "{{ db_name }}"
+  become: yes
+  become_user: postgres
+
+- name: "Create db user"
+  postgresql_user:
+    state: present
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    role_attr_flags: CREATEDB,SUPERUSER,CREATEROLE
+  become: yes
+  become_user: postgres
+
+- name: "Grant db user access to app db"
+  postgresql_privs:
+    type: database
+    database: "{{ db_name }}"
+    roles: "{{ db_user }}"
+    grant_option: no
+    privs: all
+  become: yes
+  become_user: postgres
+
+- name: Copying schema.sql 
+  become: true 
+  copy:
+    src: schema.sql
+    dest: /home        
+    mode: 0644
+
+- name: "Add data to our database"
+  become: true
+  become_user: postgres
+  shell: psql {{ db_name }} < /home/schema.sql
+
+
+
+  

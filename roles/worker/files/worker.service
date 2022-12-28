@@ -1,0 +1,12 @@
+[Unit]
+Description = <project description>
+
+[Service]
+User=user4
+EnvironmentFile=/etc/environment
+WorkingDirectory= /home/worker/target
+ExecStart=/bin/java -jar worker-jar-with-dependencies.jar
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
